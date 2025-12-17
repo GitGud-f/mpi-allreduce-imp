@@ -509,6 +509,7 @@ local.properties
 *.so.*
 *.dll
 *.dylib
+mpi_allreduce_imp
 
 # Qt-es
 object_script.*.Release
