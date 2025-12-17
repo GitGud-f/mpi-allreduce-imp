@@ -347,10 +347,6 @@ tmtags
 
 ##### VisualStudioCode
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
 *.code-workspace
 
 # Local History for Visual Studio Code
@@ -531,7 +527,6 @@ qrc_*.cpp
 ui_*.h
 *.qmlc
 *.jsc
-Makefile*
 *build-*
 *.qm
 *.prl
@@ -941,7 +936,6 @@ CMakeCache.txt
 CMakeFiles
 CMakeScripts
 Testing
-Makefile
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
