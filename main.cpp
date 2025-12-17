@@ -33,7 +33,7 @@ int main(int argc, char** argv){
 
     const int N = 100000*size;
     vector<float> data(N, 1.0f);
-    vector<float> result_naive(N), result_native(N);
+    vector<float> result_naive(N), result_native(N), result_ring(N);
 
     if(rank == MASTER_RANK){
         cout << "------------------------------------------------\n";
@@ -45,7 +45,11 @@ int main(int argc, char** argv){
         naive_allreduce(data, result_naive, rank, size);
     });
 
-    run_benchmark("2. MPI Library (Ref)   ", rank, [&]() {
+    run_benchmark("2. Ring Implementation ", rank, [&]() {
+        ring_allreduce(data, result_ring, rank, size);
+    });
+
+    run_benchmark("3. MPI Library (Ref)   ", rank, [&]() {
         MPI_Allreduce(data.data(), result_native.data(), N, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
     });
 

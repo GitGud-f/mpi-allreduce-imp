@@ -11,4 +11,6 @@ using namespace std;
 
 void naive_allreduce(const vector<float>& input, vector<float>& output, int rank, int size);
 
+void ring_allreduce(const vector<float>& input, vector<float>& output, int rank, int size);
+
 #endif
