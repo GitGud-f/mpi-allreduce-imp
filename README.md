@@ -16,17 +16,26 @@ This implementation compares three approaches using **C++** and **MPI**:
 *   **`main.cpp`**: Driver code that handles data initialization, benchmarking, and verification.
 *   **`Makefile`**: Automated build script.
 
-## Theory
+## Algorithms Implemented
 
 ### 1. Naive Approach
-*   **Mechanism:** All workers send gradients to Rank 0. Rank 0 sums them and broadcasts back.
-*   **Drawback:** Rank 0 becomes a bottleneck. Communication cost scales linearly with $N$ (number of nodes).
+*   **Structure:** Star topology.
+*   **Mechanism:** All nodes send data to Rank 0. Rank 0 sums and sends back.
+*   **Bottleneck:** Rank 0 bandwidth. Cost is $O(N \cdot M)$ where N is nodes, M is data size.
 
-### 2. Ring All-Reduce
-*   **Mechanism:** Nodes are arranged in a logical ring.
-    *   *Scatter-Reduce Phase:* Data chunks circulate the ring; each node accumulates a specific chunk.
-    *   *All-Gather Phase:* Fully accumulated chunks circulate the ring until every node has the full data.
-*   **Advantage:** Bandwidth optimal. Communication cost is constant regardless of $N$ (in terms of bandwidth usage per link).
+### 2. Tree All-Reduce (Added)
+*   **Structure:** Binary/Binomial Tree.
+*   **Mechanism:** 
+    1.  **Reduce:** Leaves send to parents recursively up to Root (Rank 0).
+    2.  **Broadcast:** Root sends final sum down to leaves.
+*   **Advantage:** **Latency Optimal**. Takes $O(\log N)$ steps. Good for high latency networks or small message sizes.
+*   **Disadvantage:** Not bandwidth optimal for large weights compared to Ring.
+
+### 3. Ring All-Reduce
+*   **Structure:** Logical Ring.
+*   **Mechanism:** Data is split into chunks. Chunks rotate through the ring (Scatter-Reduce then All-Gather).
+*   **Advantage:** **Bandwidth Optimal**. Network usage is constant per node regardless of cluster size. Best for large Neural Networks.
+
 
 ## Prerequisites
 *   **C++ Compiler** (g++ or clang)
