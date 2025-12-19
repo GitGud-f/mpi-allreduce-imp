@@ -84,3 +84,48 @@ void ring_allreduce(const vector<float>& input, vector<float>& output, int rank,
     }
 
 }
+
+void tree_allreduce(const vector<float>& input, vector<float>& output, int rank, int size){
+    int count = input.size();
+    output = input; 
+    
+    std::vector<float> temp_buffer(count);
+
+    // 1. Reduce Phase (Up the tree)
+    for (int step = 1; step < size; step *= 2) {
+        if (rank % (2 * step) == 0) {
+            // Parent
+            int source = rank + step;
+            if (source < size) {
+                MPI_Recv(temp_buffer.data(), count, MPI_FLOAT, source, DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                // Accumulate
+                for (int i = 0; i < count; ++i) {
+                    output[i] += temp_buffer[i];
+                }
+            }
+        } else if (rank % (2 * step) == step) {
+            // Child
+            int dest = rank - step;
+            MPI_Send(output.data(), count, MPI_FLOAT, dest, DATA_TAG, MPI_COMM_WORLD);
+            break; 
+        }
+    }
+
+    // 2. Broadcast Phase (Down the tree)
+    int start_step = 1;
+    while (start_step * 2 < size) start_step *= 2;
+
+    for (int step = start_step; step >= 1; step /= 2) {
+        if (rank % (2 * step) == 0) {
+            int dest = rank + step;
+            if (dest < size) {
+                // Parent
+                MPI_Send(output.data(), count, MPI_FLOAT, dest, DATA_TAG, MPI_COMM_WORLD);
+            }
+        } else if (rank % (2 * step) == step) {
+            // Child
+            int source = rank - step;
+            MPI_Recv(output.data(), count, MPI_FLOAT, source, DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        }
+    }
+}

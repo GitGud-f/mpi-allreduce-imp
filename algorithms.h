@@ -13,4 +13,6 @@ void naive_allreduce(const vector<float>& input, vector<float>& output, int rank
 
 void ring_allreduce(const vector<float>& input, vector<float>& output, int rank, int size);
 
+void tree_allreduce(const vector<float>& input, vector<float>& output, int rank, int size);
+
 #endif

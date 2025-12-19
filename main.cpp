@@ -33,7 +33,7 @@ int main(int argc, char** argv){
 
     const int N = 100000*size;
     vector<float> data(N, 1.0f);
-    vector<float> result_naive(N), result_native(N), result_ring(N);
+    vector<float> result_naive(N), result_native(N), result_tree(N), result_ring(N);
 
     if(rank == MASTER_RANK){
         cout << "------------------------------------------------\n";
@@ -49,23 +49,27 @@ int main(int argc, char** argv){
         ring_allreduce(data, result_ring, rank, size);
     });
 
-    run_benchmark("3. MPI Library (Ref)   ", rank, [&]() {
+     run_benchmark("3. Tree All-Reduce ", rank, [&]() {
+        tree_allreduce(data, result_tree, rank, size);
+    });
+
+    run_benchmark("4. MPI Library (Ref)   ", rank, [&]() {
         MPI_Allreduce(data.data(), result_native.data(), N, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
     });
 
     if(rank  == MASTER_RANK){
         float expected = (float)size;
         bool correct = (abs(result_naive[0] - expected) < 1e-5) &&
+                       (abs(result_ring[0] - expected) < 1e-5) &&
+                       (abs(result_ring[0] - expected) < 1e-5) &&
                        (abs(result_native[0] - expected) < 1e-5);
 
         cout << "------------------------------------------------\n";
         cout << "Correctness Check: " << (correct ? "PASSED" : "FAILED") << "\n";
         cout << "------------------------------------------------\n";
 
-        cout.flush(); 
+        cout<<endl; 
     }
-
-    MPI_Barrier(MPI_COMM_WORLD);
 
     MPI_Finalize();
     return 0;
