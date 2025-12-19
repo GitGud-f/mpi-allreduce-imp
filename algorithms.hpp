@@ -1,5 +1,5 @@
 /** 
- * @file algorithms.h
+ * @file algorithms.hpp
  * @brief Interface definitions for Distributed Training All-Reduce algorithms.
  * @details Contains declarations for Naive, Ring, and Tree-based reduction strategies.
 */

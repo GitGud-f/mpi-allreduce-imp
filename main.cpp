@@ -11,6 +11,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <functional>
 using namespace std;
 
 
@@ -38,6 +39,8 @@ int main(int argc, char** argv){
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    Config::load("config.txt");
 
     const int N = 100000*size;
     vector<float> data(N, 1.0f);
@@ -69,7 +72,7 @@ int main(int argc, char** argv){
         float expected = (float)size;
         bool correct = (abs(result_naive[0] - expected) < 1e-5) &&
                        (abs(result_ring[0] - expected) < 1e-5) &&
-                       (abs(result_ring[0] - expected) < 1e-5) &&
+                       (abs(result_tree[0] - expected) < 1e-5) &&
                        (abs(result_native[0] - expected) < 1e-5);
 
         cout << "------------------------------------------------\n";

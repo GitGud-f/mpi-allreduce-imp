@@ -8,6 +8,7 @@
 #include "constants.hpp"
 #include <mpi.h>
 #include <vector>
+#include <iostream>
 using namespace std;
 
 void naive_allreduce(const vector<float>& input, vector<float>& output, int rank, int size){
@@ -16,10 +17,10 @@ void naive_allreduce(const vector<float>& input, vector<float>& output, int rank
 
     if(rank == Config::MASTER_RANK) { // Master
         vector<float> temp_buffer(count);
-        for(int src = 0; src < size; src++){
-            if(src == Config::MASTER_RANK)
-                continue;
-            MPI_Recv(temp_buffer.data(), count, MPI_FLOAT, src, Config::DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for(int j = 0; j < size-1; j++){
+            MPI_Status status;
+
+            MPI_Recv(temp_buffer.data(), count, MPI_FLOAT, MPI_ANY_SOURCE, Config::DATA_TAG, MPI_COMM_WORLD, &status);
             for(int i = 0; i < count; i++){
                 output[i] += temp_buffer[i];
             }
@@ -39,9 +40,14 @@ void naive_allreduce(const vector<float>& input, vector<float>& output, int rank
 }
 
 void ring_allreduce(const vector<float>& input, vector<float>& output, int rank, int size){
-    output = input;
     int count = input.size();
 
+    if (count % size != 0) {
+        if (rank == 0) cerr << "[Error] Ring All-Reduce requires data size to be divisible by MPI Size." << endl;
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+    
+    output = input;
     int chunk_size = count / size;
     int left = (rank - 1 + size) % size;
     int right = (rank + 1) % size;
@@ -87,6 +93,13 @@ void ring_allreduce(const vector<float>& input, vector<float>& output, int rank,
 }
 
 void tree_allreduce(const vector<float>& input, vector<float>& output, int rank, int size){
+    if ((size & (size - 1)) != 0) {
+        // Fallback to Naive or MPI implementation if not power of 2
+        if(rank == 0) cerr << "[Warning] Tree algo requires Power-of-2 processes. Switching to Naive." << endl;
+        naive_allreduce(input, output, rank, size); 
+        return;
+    }
+
     int count = input.size();
     output = input; 
     
