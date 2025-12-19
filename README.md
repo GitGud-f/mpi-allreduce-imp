@@ -3,18 +3,7 @@
 ## Overview
 This project simulates and benchmarks different **All-Reduce** strategies used in Distributed Deep Learning (e.g., TensorFlow, PyTorch). It solves the problem of synchronizing gradients across multiple nodes efficiently.
 
-This implementation compares three approaches using **C++** and **MPI**:
-1.  **Naive Approach:** Centralized Parameter Server style (Bottlenecked).
-2.  **Ring All-Reduce:** Bandwidth-optimal distributed approach.
-3.  **MPI Native:** The highly optimized `MPI_Allreduce` provided by the library.
 
-## Project Structure
-
-
-*   **`algorithms.h`**: Interface definition for the reduction algorithms.
-*   **`algorithms.cpp`**: Implementation logic for Naive and Ring algorithms.
-*   **`main.cpp`**: Driver code that handles data initialization, benchmarking, and verification.
-*   **`Makefile`**: Automated build script.
 
 ## Algorithms Implemented
 
@@ -23,7 +12,7 @@ This implementation compares three approaches using **C++** and **MPI**:
 *   **Mechanism:** All nodes send data to Rank 0. Rank 0 sums and sends back.
 *   **Bottleneck:** Rank 0 bandwidth. Cost is $O(N \cdot M)$ where N is nodes, M is data size.
 
-### 2. Tree All-Reduce (Added)
+### 2. Tree All-Reduce
 *   **Structure:** Binary/Binomial Tree.
 *   **Mechanism:** 
     1.  **Reduce:** Leaves send to parents recursively up to Root (Rank 0).
@@ -41,6 +30,18 @@ This implementation compares three approaches using **C++** and **MPI**:
 *   **C++ Compiler** (g++ or clang)
 *   **MPI Implementation** (OpenMPI or MPICH)
 *   **Make**
+
+## Configuration
+The project uses a `config.txt` file to define simulation constants avoiding "magic numbers".
+
+**config.txt**
+```text
+MASTER_RANK=0
+DATA_TAG=1
+```
+
+- `MASTER_RANK`: The MPI rank responsible for coordination (Naive approach) or reporting (Main).
+- `DATA_TAG`: The MPI tag used for data communication.
 
 ## Building and Running
 
@@ -66,3 +67,13 @@ To remove object files and the executable:
 ```bash
 make clean
 ```
+
+## Project Structure
+
+*   **`algorithms.hpp`**: Interface definition for the reduction algorithms.
+*   **`algorithms.cpp`**: Implementation logic for Naive and Ring algorithms.
+*   **`main.cpp`**: Driver code that handles data initialization, benchmarking, and verification.
+*   **`constants.hpp/cpp`**: Logic to read config.txt and expose global settings.
+*   **`config.txt`**: Runtime settings.
+*   **`Makefile`**: Automated build script.
+

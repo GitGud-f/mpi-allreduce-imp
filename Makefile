@@ -3,7 +3,7 @@ CXXFLAGS := -O3 -Wall -Wextra -std=c++17
 TARGET   := mpi_allreduce_imp
 
 # Object files list
-OBJS     := main.o algorithms.o
+OBJS     := main.o algorithms.o constants.o
 
 # Default Processes
 NP       ?= 4

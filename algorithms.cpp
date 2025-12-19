@@ -1,39 +1,40 @@
 /**
  * @file algorithms.cpp
  * @brief Implementation of the All-Reduce algorithms.
+ * @details Contains the logic for Naive, Ring, and Tree reduction using MPI.
  */
 
-#include "algorithms.h"
+#include "algorithms.hpp"
+#include "constants.hpp"
 #include <mpi.h>
 #include <vector>
 using namespace std;
-
-// MPI Tag for Sending Data
-#define DATA_TAG 1
-// Rank of the master process
-#define MASTER_RANK 0
 
 void naive_allreduce(const vector<float>& input, vector<float>& output, int rank, int size){
     output = input;
     int count = input.size();
 
-    if(rank == MASTER_RANK) { // Master
+    if(rank == Config::MASTER_RANK) { // Master
         vector<float> temp_buffer(count);
-        for(int src = 1; src < size; src++){
-            MPI_Recv(temp_buffer.data(), count, MPI_FLOAT, src, DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for(int src = 0; src < size; src++){
+            if(src == Config::MASTER_RANK)
+                continue;
+            MPI_Recv(temp_buffer.data(), count, MPI_FLOAT, src, Config::DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             for(int i = 0; i < count; i++){
                 output[i] += temp_buffer[i];
             }
         }
 
-        for(int dest = 1; dest < size; dest++){
-            MPI_Send(output.data(), count, MPI_FLOAT, dest, DATA_TAG, MPI_COMM_WORLD);
+        for(int dest = 0; dest < size; dest++){
+            if(dest == Config::MASTER_RANK)
+                continue;
+            MPI_Send(output.data(), count, MPI_FLOAT, dest, Config::DATA_TAG, MPI_COMM_WORLD);
         }
     } else{ // Worker
 
-        MPI_Send(input.data(), count, MPI_FLOAT, MASTER_RANK, DATA_TAG, MPI_COMM_WORLD);
+        MPI_Send(input.data(), count, MPI_FLOAT, Config::MASTER_RANK, Config::DATA_TAG, MPI_COMM_WORLD);
 
-        MPI_Recv(output.data(), count, MPI_FLOAT, MASTER_RANK, DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(output.data(), count, MPI_FLOAT, Config::MASTER_RANK, Config::DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 }
 
@@ -55,8 +56,8 @@ void ring_allreduce(const vector<float>& input, vector<float>& output, int rank,
         int recv_offset = recv_idx * chunk_size;
 
         MPI_Sendrecv(
-            &output[send_offset], chunk_size, MPI_FLOAT, right, DATA_TAG,
-            recv_chunk.data(),    chunk_size, MPI_FLOAT, left,  DATA_TAG,
+            &output[send_offset], chunk_size, MPI_FLOAT, right, Config::DATA_TAG,
+            recv_chunk.data(),    chunk_size, MPI_FLOAT, left,  Config::DATA_TAG,
             MPI_COMM_WORLD, MPI_STATUS_IGNORE
         );
 
@@ -73,8 +74,8 @@ void ring_allreduce(const vector<float>& input, vector<float>& output, int rank,
         int recv_offset = recv_idx * chunk_size;
 
         MPI_Sendrecv(
-            &output[send_offset], chunk_size, MPI_FLOAT, right, DATA_TAG,
-            recv_chunk.data(),    chunk_size, MPI_FLOAT, left,  DATA_TAG,
+            &output[send_offset], chunk_size, MPI_FLOAT, right, Config::DATA_TAG,
+            recv_chunk.data(),    chunk_size, MPI_FLOAT, left,  Config::DATA_TAG,
             MPI_COMM_WORLD, MPI_STATUS_IGNORE
         );
 
@@ -97,7 +98,7 @@ void tree_allreduce(const vector<float>& input, vector<float>& output, int rank,
             // Parent
             int source = rank + step;
             if (source < size) {
-                MPI_Recv(temp_buffer.data(), count, MPI_FLOAT, source, DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Recv(temp_buffer.data(), count, MPI_FLOAT, source, Config::DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 // Accumulate
                 for (int i = 0; i < count; ++i) {
                     output[i] += temp_buffer[i];
@@ -106,7 +107,7 @@ void tree_allreduce(const vector<float>& input, vector<float>& output, int rank,
         } else if (rank % (2 * step) == step) {
             // Child
             int dest = rank - step;
-            MPI_Send(output.data(), count, MPI_FLOAT, dest, DATA_TAG, MPI_COMM_WORLD);
+            MPI_Send(output.data(), count, MPI_FLOAT, dest, Config::DATA_TAG, MPI_COMM_WORLD);
             break; 
         }
     }
@@ -120,12 +121,12 @@ void tree_allreduce(const vector<float>& input, vector<float>& output, int rank,
             int dest = rank + step;
             if (dest < size) {
                 // Parent
-                MPI_Send(output.data(), count, MPI_FLOAT, dest, DATA_TAG, MPI_COMM_WORLD);
+                MPI_Send(output.data(), count, MPI_FLOAT, dest, Config::DATA_TAG, MPI_COMM_WORLD);
             }
         } else if (rank % (2 * step) == step) {
             // Child
             int source = rank - step;
-            MPI_Recv(output.data(), count, MPI_FLOAT, source, DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(output.data(), count, MPI_FLOAT, source, Config::DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
     }
 }
