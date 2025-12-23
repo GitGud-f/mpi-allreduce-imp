@@ -68,6 +68,28 @@ To remove object files and the executable:
 make clean
 ```
 
+## Generating Documentation
+The code is fully documented using Doxygen-style comments. You can generate a modern HTML documentation site locally.
+
+
+### 1. Install Doxygen and Graphviz
+Ubuntu/Debian/WSL:
+```bash
+sudo apt-get install doxygen graphviz
+```
+macOS:
+```bash
+brew install doxygen graphviz
+```
+
+### 2. Generate HTML
+Run the following command in the project root:
+```bash
+doxygen Doxyfile
+```
+### 3. View Documentation
+Open the generated HTML file in your browser: `./docs/index.html`
+
 ## Project Structure
 
 *   **`algorithms.hpp`**: Interface definition for the reduction algorithms.
@@ -76,4 +98,6 @@ make clean
 *   **`constants.hpp/cpp`**: Logic to read config.txt and expose global settings.
 *   **`config.txt`**: Runtime settings.
 *   **`Makefile`**: Automated build script.
+*   **`Doxyfile`**: Configuration for generating documentation.
+*   **`doxygen-awesome.css`**: Custom CSS theme for modern documentation styling.
 
