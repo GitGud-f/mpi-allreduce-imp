@@ -42,7 +42,9 @@ int main(int argc, char** argv){
 
     Config::load("config.txt");
 
-    const int N = 100000*size;
+    const int MIN_N = 1000000;
+    const int N = (MIN_N / size) * size; // to ensure divisibility
+    
     vector<float> data(N, 1.0f);
     vector<float> result_naive(N), result_native(N), result_tree(N), result_ring(N);
 
