@@ -60,7 +60,7 @@ int main(int argc, char** argv){
         ring_allreduce(data, result_ring, rank, size);
     });
 
-     run_benchmark("3. Tree All-Reduce ", rank, [&]() {
+     run_benchmark("3. Tree Implementation ", rank, [&]() {
         tree_allreduce(data, result_tree, rank, size);
     });
 
